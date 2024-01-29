@@ -93,6 +93,7 @@ function CreateListing() {
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=${process.env.REACT_APP_GEOCODE_API_KEY}`
       );
+      // AIzaSyA71eRf3VK1CUeKcRMUNKudKT3H0z5zcaI
       console.log(process.env.REACT_APP_GEOCODE_API_KEY);
       console.log(response);
       const data = await response.json();
@@ -158,6 +159,7 @@ function CreateListing() {
       imgUrls,
       geolocation,
       timestamp: serverTimestamp(),
+      userRef:auth.currentUser.uid,
     };
     delete formDataCopy.images;
     !formDataCopy.offer && delete formDataCopy.discountedPrice;
