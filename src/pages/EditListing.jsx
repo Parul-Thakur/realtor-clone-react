@@ -1,22 +1,32 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import Spinner from "../components/Spinner";
-import { auth } from "../firebase";
-import { db } from "../firebase";
+import { toast } from "react-toastify";
 import {
   getStorage,
   ref,
   uploadBytesResumable,
   getDownloadURL,
 } from "firebase/storage";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 import { v4 as uuidv4 } from "uuid";
-import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  serverTimestamp,
+  updateDoc,
+} from "firebase/firestore";
+import { db } from "../firebase";
+import { useNavigate, useParams } from "react-router-dom";
+import { useEffect } from "react";
 
-function CreateListing() {
+export default function CreateListing() {
   const navigate = useNavigate();
+  const auth = getAuth();
   const [geolocationEnabled, setGeolocationEnabled] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [listing, setListing] = useState(null);
   const [formData, setFormData] = useState({
     type: "rent",
     name: "",
@@ -50,6 +60,32 @@ function CreateListing() {
     images,
   } = formData;
 
+  const params = useParams();
+
+  useEffect(() => {
+    if (listing && listing.userRef !== auth.currentUser.uid) {
+      toast.error("You can't edit this listing");
+      navigate("/");
+    }
+  }, [auth.currentUser.uid, listing, navigate]);
+
+  useEffect(() => {
+    setLoading(true);
+    async function fetchListing() {
+      const docRef = doc(db, "listings", params.listingId);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        setListing(docSnap.data());
+        setFormData({ ...docSnap.data() });
+        setLoading(false);
+      } else {
+        navigate("/");
+        toast.error("Listing does not exist");
+      }
+    }
+    fetchListing();
+  }, [navigate, params.listingId]);
+
   function onChange(e) {
     let boolean = null;
     if (e.target.value === "true") {
@@ -73,7 +109,6 @@ function CreateListing() {
       }));
     }
   }
-
   async function onSubmit(e) {
     e.preventDefault();
     setLoading(true);
@@ -119,6 +154,8 @@ function CreateListing() {
         uploadTask.on(
           "state_changed",
           (snapshot) => {
+            // Observe state change events such as progress, pause, and resume
+            // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
             const progress =
               (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
             console.log("Upload is " + progress + "% done");
@@ -132,9 +169,12 @@ function CreateListing() {
             }
           },
           (error) => {
+            // Handle unsuccessful uploads
             reject(error);
           },
           () => {
+            // Handle successful uploads on complete
+            // For instance, get the download URL: https://firebasestorage.googleapis.com/...
             getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
               resolve(downloadURL);
             });
@@ -156,25 +196,26 @@ function CreateListing() {
       imgUrls,
       geolocation,
       timestamp: serverTimestamp(),
-      userRef:auth.currentUser.uid,
+      userRef: auth.currentUser.uid,
     };
     delete formDataCopy.images;
     !formDataCopy.offer && delete formDataCopy.discountedPrice;
     delete formDataCopy.latitude;
     delete formDataCopy.longitude;
-    const docRef = await addDoc(collection(db, "listings"), formDataCopy);
+    const docRef = doc(db, "listings", params.listingId);
+
+    await updateDoc(docRef, formDataCopy);
     setLoading(false);
-    toast.success("Listing created");
+    toast.success("Listing Edited");
     navigate(`/category/${formDataCopy.type}/${docRef.id}`);
   }
 
   if (loading) {
     return <Spinner />;
   }
-
   return (
     <main className="max-w-md px-2 mx-auto">
-      <h1 className="text-3xl text-center mt-6 font-bold">Create a Listing</h1>
+      <h1 className="text-3xl text-center mt-6 font-bold">Edit Listing</h1>
       <form onSubmit={onSubmit}>
         <p className="text-lg mt-6 font-semibold">Sell / Rent</p>
         <div className="flex">
@@ -437,11 +478,9 @@ function CreateListing() {
           type="submit"
           className="mb-6 w-full px-7 py-3 bg-blue-600 text-white font-medium text-sm uppercase rounded shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out"
         >
-          Create Listing
+          Edit Listing
         </button>
       </form>
     </main>
   );
 }
-
-export default CreateListing;
