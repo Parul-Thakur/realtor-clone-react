@@ -65,6 +65,7 @@ function CreateListing() {
         images: e.target.files,
       }));
     }
+    
     // Text/Boolean/Number
     if (!e.target.files) {
       setFormData((prevState) => ({

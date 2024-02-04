@@ -1,7 +1,6 @@
 import React from "react";
 import {
   collection,
-  getDoc,
   getDocs,
   limit,
   orderBy,
@@ -45,6 +44,7 @@ function Home() {
     }
     fetchListings();
   }, []);
+
   // Places for rent
   const [rentListings, setRentListings] = useState(null);
   useEffect(() => {
@@ -75,6 +75,7 @@ function Home() {
     }
     fetchListings();
   }, []);
+
   // Places for rent
   const [saleListings, setSaleListings] = useState(null);
   useEffect(() => {

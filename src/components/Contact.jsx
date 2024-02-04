@@ -22,9 +22,10 @@ export default function Contact({ userRef, listing }) {
   function onChange(e) {
     setMessage(e.target.value);
   }
+
   return (
     <>
-      {landlord !== null && (
+   {landlord !== null && (
         <div className="flex flex-col w-full">
           <p>
             Contact {landlord.name} for the {listing.name.toLowerCase()}

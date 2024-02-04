@@ -4,18 +4,14 @@ import { useEffect } from "react";
 import Spinner from "../components/Spinner";
 import { db } from "../firebase";
 import { Swiper, SwiperSlide } from "swiper/react";
-import {
-  EffectFade,
-  Autoplay,
-  Navigation,
-  Pagination,
-} from "swiper/modules";
+import { EffectFade, Autoplay, Navigation, Pagination } from "swiper/modules";
 import "swiper/css/bundle";
 import { useNavigate } from "react-router-dom";
+
 export default function Slider() {
   const [listings, setListings] = useState(null);
   const [loading, setLoading] = useState(true);
-  // SwiperCore.use([Autoplay, Navigation, Pagination]);
+
   const navigate = useNavigate();
   useEffect(() => {
     async function fetchListings() {
@@ -44,11 +40,12 @@ export default function Slider() {
     listings && (
       <>
         <Swiper
+          modules={[Navigation, Pagination, EffectFade, Autoplay]}
           slidesPerView={1}
           navigation
-          pagination={{ type: "progressbar" }}
+          pagination={{ clickable: true }}
           effect="fade"
-          modules={[EffectFade]}
+          // modules={[EffectFade]}
           autoplay={{ delay: 3000 }}
         >
           {listings.map(({ data, id }) => (

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { auth, db } from "../firebase";
 import { useNavigate } from "react-router";
 import { toast } from "react-toastify";
@@ -40,12 +40,14 @@ function Profile() {
       [e.target.id]: e.target.value,
     }));
   }
+
+  const uidRef = useRef(auth.currentUser.uid);
   useEffect(() => {
     async function fetchUserListings() {
       const listingRef = collection(db, "listings");
       const q = query(
         listingRef,
-        where("userRef", "==", auth.currentUser.uid),
+        where("userRef", "==", uidRef.current),
         orderBy("timestamp", "desc")
       );
       const querySnap = await getDocs(q);
@@ -60,7 +62,7 @@ function Profile() {
       setLoading(false);
     }
     fetchUserListings();
-  }, [auth.currentUser.uid]);
+  }, [uidRef]);
 
   async function onDelete(listingID) {
     if (window.confirm("Are you sure you want to delete?")) {
